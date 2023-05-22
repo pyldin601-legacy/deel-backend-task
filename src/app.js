@@ -167,6 +167,7 @@ app.post("/balances/deposit/:id", async (req, res) => {
         },
       ],
       where: { paid: { [Op.not]: true } },
+      transaction,
     });
     const totalJobsToPay = jobs.reduce((acc, m) => acc + m.price, 0);
     const maxDepositAmount = totalJobsToPay * 0.25;
