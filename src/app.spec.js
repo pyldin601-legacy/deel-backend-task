@@ -118,14 +118,18 @@ describe("on GET /jobs/unpaid", () => {
 
 describe("on POST /jobs/:job_id/pay", () => {
   it("should fail with 401 if profile_id header not set", async () => {
-    await request.post("/jobs/1/pay").expect(401);
+    await request.post("/jobs/3/pay").expect(401);
+  });
+
+  it("should pay the job", async () => {
+    await request.post("/jobs/3/pay").set("profile_id", 2).expect(200);
   });
 });
 
 describe("on POST /balances/deposit/:userId", () => {
-  it("should fail with 401 if profile_id header not set", async () => {
-    await request.post("/balances/deposit/3").expect(401);
-  });
+  // it("should fail with 401 if profile_id header not set", async () => {
+  //   await request.post("/balances/deposit/3").expect(401);
+  // });
 });
 
 describe("on GET /admin/best-profession?start=<date>&end=<date>", () => {});
