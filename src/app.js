@@ -13,7 +13,7 @@ app.set("sequelize", sequelize);
 app.set("models", sequelize.models);
 
 /**
- * @returns list of non-terminated contracts
+ * Handles a GET request to get list of non-terminated contracts.
  */
 app.get("/contracts", getProfile, async (req, res) => {
   const { Contract } = req.app.get("models");
@@ -29,7 +29,7 @@ app.get("/contracts", getProfile, async (req, res) => {
 });
 
 /**
- * @returns contract by id
+ * Handles a GET request to get the contract.
  */
 app.get("/contracts/:id", getProfile, async (req, res) => {
   const { Contract } = req.app.get("models");
@@ -51,6 +51,9 @@ app.get("/contracts/:id", getProfile, async (req, res) => {
   return res.json(contract);
 });
 
+/**
+ * Handles a GET request to get the list of unpaid jobs.
+ */
 app.get("/jobs/unpaid", getProfile, async (req, res) => {
   const { Contract, Job } = req.app.get("models");
   const profileId = req.profile.get("id");
@@ -72,6 +75,9 @@ app.get("/jobs/unpaid", getProfile, async (req, res) => {
   return res.json(jobs);
 });
 
+/**
+ * Handles a POST request to pay for a job.
+ */
 app.post("/jobs/:id/pay", getProfile, async (req, res) => {
   const { Job, Profile, Contract } = req.app.get("models");
   const { profile } = req;
@@ -134,6 +140,9 @@ app.post("/jobs/:id/pay", getProfile, async (req, res) => {
   );
 });
 
+/**
+ * Handles a POST request to deposit funds into a user's balance.
+ */
 app.post("/balances/deposit/:id", async (req, res) => {
   const { Job, Profile, Contract } = req.app.get("models");
   const { id } = req.params;
