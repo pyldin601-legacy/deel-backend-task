@@ -2,7 +2,10 @@ const supertest = require("supertest");
 const app = require("./app");
 const { seed } = require("./seed");
 
+const { Job, Profile } = app.get("models");
+
 let request;
+
 beforeEach(async () => {
   await seed();
   request = supertest(app);
@@ -122,11 +125,29 @@ describe("on POST /jobs/:job_id/pay", () => {
   });
 
   it("should pay the job", async () => {
+    const job = await Job.findOne({ where: { id: 3 } });
+    const client = await Profile.findOne({ where: { id: 2 } });
+    const contractor = await Profile.findOne({ where: { id: 6 } });
+
+    expect(job.price).toBe(202);
+    expect(job.paid).toBeFalsy();
+    expect(client.balance.toFixed(2)).toBe("231.11");
+    expect(contractor.balance.toFixed(2)).toBe("1214.00");
+
     await request.post("/jobs/3/pay").set("profile_id", 2).expect(200);
+
+    await Promise.all([job.reload(), client.reload(), contractor.reload()]);
+
+    expect(job.paid).toBeTruthy();
+    expect(client.balance.toFixed(2)).toBe("29.11");
+    expect(contractor.balance.toFixed(2)).toBe("1416.00");
   });
 
   it("should fail with 409 if the job already paid", async () => {
-    await request.post("/jobs/14/pay").set("profile_id", 2).expect(409);
+    await request
+      .post("/jobs/14/pay")
+      .set("profile_id", 2)
+      .expect(409, "JOB_ALREADY_PAID");
   });
 
   it("should fail with 401 if client has insufficient funds", async () => {
