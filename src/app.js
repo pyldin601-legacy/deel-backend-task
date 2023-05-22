@@ -139,4 +139,38 @@ app.post("/jobs/:id/pay", getProfile, async (req, res) => {
   );
 });
 
+app.post("/balances/deposit/:id", async (req, res) => {
+  const { Job, Profile, Contract } = req.app.get("models");
+  const { id } = req.params;
+  const { amount: amountToDeposit } = req.body;
+
+  return sequelize.transaction(async (transaction) => {
+    const client = await Profile.findOne({ where: { id }, lock: true });
+
+    const jobs = await Job.findAll({
+      include: [
+        {
+          model: Contract,
+          required: true,
+          where: {
+            ClientId: client.id,
+            status: { [Op.not]: "terminated" },
+          },
+        },
+      ],
+      where: { paid: { [Op.not]: true } },
+    });
+    const totalJobsToPay = jobs.reduce((acc, m) => acc + m.price, 0);
+    const maxDepositAmount = totalJobsToPay * 0.25;
+
+    if (amountToDeposit > maxDepositAmount) {
+      return res.status(400).end("DEPOSIT_LIMIT_EXCEEDED");
+    }
+
+    await client.increment("balance", { by: amountToDeposit, transaction });
+
+    return res.status(200).end();
+  });
+});
+
 module.exports = app;

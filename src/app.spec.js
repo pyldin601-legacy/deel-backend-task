@@ -159,9 +159,23 @@ describe("on POST /jobs/:job_id/pay", () => {
 });
 
 describe("on POST /balances/deposit/:userId", () => {
-  // it("should fail with 401 if profile_id header not set", async () => {
-  //   await request.post("/balances/deposit/3").expect(401);
-  // });
+  it("should deposit money to client's balance", async () => {
+    const client = await Profile.findOne({ where: { id: 2 } });
+
+    expect(client.balance.toFixed(2)).toBe("231.11");
+
+    await request.post("/balances/deposit/2").send({ amount: 12 }).expect(200);
+    await client.reload();
+
+    expect(client.balance.toFixed(2)).toBe("243.11");
+  });
+
+  it("should fail with 400 if deposit limit exceeded", async () => {
+    await request
+      .post("/balances/deposit/2")
+      .send({ amount: 123 })
+      .expect(400, "DEPOSIT_LIMIT_EXCEEDED");
+  });
 });
 
 describe("on GET /admin/best-profession?start=<date>&end=<date>", () => {});
