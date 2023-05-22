@@ -75,3 +75,59 @@ describe("on GET /contracts/:id", () => {
     await request.get("/contracts/3").set("profile_id", 1).expect(403);
   });
 });
+
+describe("on GET /jobs/unpaid", () => {
+  it("should fail with 401 if profile_id header not set", async () => {
+    await request.get("/jobs/unpaid").expect(401);
+  });
+
+  it("should return list of unpaid jobs", async () => {
+    const response = await request.get("/jobs/unpaid").set("profile_id", 6);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual([
+      {
+        id: 2,
+        description: "work",
+        price: 201,
+        paid: null,
+        paymentDate: null,
+        createdAt: expect.any(String),
+        updatedAt: expect.any(String),
+        ContractId: 2,
+        Contract: expect.objectContaining({
+          status: "in_progress",
+        }),
+      },
+      {
+        id: 3,
+        description: "work",
+        price: 202,
+        paid: null,
+        paymentDate: null,
+        createdAt: expect.any(String),
+        updatedAt: expect.any(String),
+        ContractId: 3,
+        Contract: expect.objectContaining({
+          status: "in_progress",
+        }),
+      },
+    ]);
+  });
+});
+
+describe("on POST /jobs/:job_id/pay", () => {
+  it("should fail with 401 if profile_id header not set", async () => {
+    await request.post("/jobs/1/pay").expect(401);
+  });
+});
+
+describe("on POST /balances/deposit/:userId", () => {
+  it("should fail with 401 if profile_id header not set", async () => {
+    await request.post("/balances/deposit/3").expect(401);
+  });
+});
+
+describe("on GET /admin/best-profession?start=<date>&end=<date>", () => {});
+
+describe("on GET /admin/best-clients?start=<date>&end=<date>&limit=<integer>", () => {});

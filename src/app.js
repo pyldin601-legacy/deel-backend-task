@@ -9,6 +9,9 @@ app.use(bodyParser.json());
 app.set("sequelize", sequelize);
 app.set("models", sequelize.models);
 
+/**
+ * @returns list of non-terminated contracts
+ */
 app.get("/contracts", getProfile, async (req, res) => {
   const { Contract } = req.app.get("models");
   const profileId = req.profile.get("id");
@@ -43,6 +46,27 @@ app.get("/contracts/:id", getProfile, async (req, res) => {
   }
 
   return res.json(contract);
+});
+
+app.get("/jobs/unpaid", getProfile, async (req, res) => {
+  const { Contract, Job } = req.app.get("models");
+  const profileId = req.profile.get("id");
+
+  const jobs = await Job.findAll({
+    include: [
+      {
+        model: Contract,
+        required: true,
+        where: {
+          [Op.or]: [{ ContractorId: profileId }, { ClientId: profileId }],
+          status: { [Op.not]: "terminated" },
+        },
+      },
+    ],
+    where: { paid: { [Op.not]: true } },
+  });
+
+  return res.json(jobs);
 });
 
 module.exports = app;
