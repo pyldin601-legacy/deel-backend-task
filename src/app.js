@@ -128,11 +128,6 @@ app.post("/jobs/:id/pay", getProfile, async (req, res) => {
         job.update({ paid: true }, { transaction }),
       ]);
 
-      await Promise.all([
-        profile.reload({ transaction }),
-        contractor.reload({ transaction }),
-      ]);
-
       return res.status(200).end();
     },
     { isolationLevel: ISOLATION_LEVELS.SERIALIZABLE }
