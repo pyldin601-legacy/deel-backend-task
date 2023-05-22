@@ -124,6 +124,17 @@ describe("on POST /jobs/:job_id/pay", () => {
   it("should pay the job", async () => {
     await request.post("/jobs/3/pay").set("profile_id", 2).expect(200);
   });
+
+  it("should fail with 409 if the job already paid", async () => {
+    await request.post("/jobs/14/pay").set("profile_id", 2).expect(409);
+  });
+
+  it("should fail with 401 if client has insufficient funds", async () => {
+    await request
+      .post("/jobs/5/pay")
+      .set("profile_id", 4)
+      .expect(401, "INSUFFICIENT_FUNDS");
+  });
 });
 
 describe("on POST /balances/deposit/:userId", () => {

@@ -1,6 +1,9 @@
 const express = require("express");
 const bodyParser = require("body-parser");
-const { Op } = require("sequelize");
+const {
+  Op,
+  Transaction: { ISOLATION_LEVELS },
+} = require("sequelize");
 const { sequelize } = require("./model");
 const { getProfile } = require("./middleware/getProfile");
 
@@ -74,69 +77,66 @@ app.post("/jobs/:id/pay", getProfile, async (req, res) => {
   const { profile } = req;
   const { id } = req.params;
 
-  if (profile.get("type") !== "client") {
-    // @todo Add proper error message
+  if (profile.type !== "client") {
     return res.status(403).end("WRONG_PROFILE_TYPE");
   }
 
-  await sequelize.transaction(async (transaction) => {
-    const client = await Profile.findOne({
-      where: { id: profile.get("id") },
-      transaction,
-    });
-
-    if (!client) {
-      return res.status(404).end("CLIENT_NOT_FOUND");
-    }
-
-    const job = await Job.findOne({
-      where: { id },
-      include: [
-        {
-          model: Contract,
-          include: [{ model: Profile, as: "Contractor" }],
-        },
-      ],
-      transaction,
-    });
-
-    if (!job) {
-      return res.status(404).end("JOB_NOT_FOUND");
-    }
-
-    if (job.get("paid")) {
-      return res.status(409).end("JOB_ALREADY_PAID");
-    }
-
-    if (profile.get("balance") < job.get("price")) {
-      return res.status(409).end("INSUFFICIENT_FUNDS");
-    }
-
-    const contract = await job.getContract();
-    const contractor = await contract.getContractor();
-
-    await Promise.all([
-      contractor.increment("balance", {
-        by: job.get("price"),
+  return sequelize.transaction(
+    async (transaction) => {
+      const client = await Profile.findOne({
+        where: { id: profile.id },
+        lock: true,
         transaction,
-      }),
-      profile.decrement("balance", {
-        by: job.get("price"),
+      });
+
+      const job = await Job.findOne({
+        where: { id },
+        lock: true,
+        include: [
+          {
+            model: Contract,
+            include: [{ model: Profile, lock: true, as: "Contractor" }],
+          },
+        ],
         transaction,
-      }),
-    ]);
+      });
 
-    await Promise.all([
-      job.update({ paid: true }, { transaction }),
-      profile.reload({ transaction }),
-      contractor.reload({ transaction }),
-    ]);
+      if (!job) {
+        return res.status(404).end("JOB_NOT_FOUND");
+      }
 
-    job.get("paid"); // ?
-    profile.get("balance"); // ?
+      if (job.get("paid")) {
+        return res.status(409).end("JOB_ALREADY_PAID");
+      }
 
-    return res.status(200).end();
-  });
+      if (client.get("balance") < job.get("price")) {
+        return res.status(401).end("INSUFFICIENT_FUNDS");
+      }
+
+      const contract = await job.getContract();
+      const contractor = await contract.getContractor();
+
+      await Promise.all([
+        contractor.increment("balance", {
+          by: job.get("price"),
+          transaction,
+        }),
+        profile.decrement("balance", {
+          by: job.get("price"),
+          transaction,
+        }),
+        job.update({ paid: true }, { transaction }),
+      ]);
+
+      await Promise.all([
+        profile.reload({ transaction }),
+        contractor.reload({ transaction }),
+      ]);
+
+      return res.status(200).end();
+    },
+    { isolationLevel: ISOLATION_LEVELS.SERIALIZABLE }
+  );
 });
 
 module.exports = app;
