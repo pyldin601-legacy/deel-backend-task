@@ -176,6 +176,18 @@ describe("on POST /balances/deposit/:userId", () => {
       .send({ amount: 123 })
       .expect(400, "DEPOSIT_LIMIT_EXCEEDED");
   });
+
+  it("should fail with 400 if deposit amount is too low", async () => {
+    await request
+      .post("/balances/deposit/2")
+      .send({ amount: 0 })
+      .expect(400, "DEPOSIT_AMOUNT_TOO_LOW");
+
+    await request
+      .post("/balances/deposit/2")
+      .send({ amount: -10 })
+      .expect(400, "DEPOSIT_AMOUNT_TOO_LOW");
+  });
 });
 
 describe("on GET /admin/best-profession?start=<date>&end=<date>", () => {});

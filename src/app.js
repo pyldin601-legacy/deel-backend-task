@@ -144,8 +144,16 @@ app.post("/balances/deposit/:id", async (req, res) => {
   const { id } = req.params;
   const { amount: amountToDeposit } = req.body;
 
+  if (amountToDeposit <= 0) {
+    return res.status(400).end("DEPOSIT_AMOUNT_TOO_LOW");
+  }
+
   return sequelize.transaction(async (transaction) => {
-    const client = await Profile.findOne({ where: { id }, lock: true, transaction });
+    const client = await Profile.findOne({
+      where: { id },
+      lock: true,
+      transaction,
+    });
 
     const jobs = await Job.findAll({
       include: [
