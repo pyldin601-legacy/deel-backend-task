@@ -145,7 +145,7 @@ app.post("/balances/deposit/:id", async (req, res) => {
   const { amount: amountToDeposit } = req.body;
 
   return sequelize.transaction(async (transaction) => {
-    const client = await Profile.findOne({ where: { id }, lock: true });
+    const client = await Profile.findOne({ where: { id }, lock: true, transaction });
 
     const jobs = await Job.findAll({
       include: [
