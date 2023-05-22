@@ -148,38 +148,41 @@ app.post("/balances/deposit/:id", async (req, res) => {
     return res.status(400).end("DEPOSIT_AMOUNT_TOO_LOW");
   }
 
-  return sequelize.transaction(async (transaction) => {
-    const client = await Profile.findOne({
-      where: { id },
-      lock: true,
-      transaction,
-    });
+  return sequelize.transaction(
+    async (transaction) => {
+      const client = await Profile.findOne({
+        where: { id },
+        lock: true,
+        transaction,
+      });
 
-    const jobs = await Job.findAll({
-      include: [
-        {
-          model: Contract,
-          required: true,
-          where: {
-            ClientId: client.id,
-            status: { [Op.not]: "terminated" },
+      const jobs = await Job.findAll({
+        include: [
+          {
+            model: Contract,
+            required: true,
+            where: {
+              ClientId: client.id,
+              status: { [Op.not]: "terminated" },
+            },
           },
-        },
-      ],
-      where: { paid: { [Op.not]: true } },
-      transaction,
-    });
-    const totalJobsToPay = jobs.reduce((acc, m) => acc + m.price, 0);
-    const maxDepositAmount = totalJobsToPay * 0.25;
+        ],
+        where: { paid: { [Op.not]: true } },
+        transaction,
+      });
+      const totalJobsToPay = jobs.reduce((acc, m) => acc + m.price, 0);
+      const maxDepositAmount = totalJobsToPay * 0.25;
 
-    if (amountToDeposit > maxDepositAmount) {
-      return res.status(400).end("DEPOSIT_LIMIT_EXCEEDED");
-    }
+      if (amountToDeposit > maxDepositAmount) {
+        return res.status(400).end("DEPOSIT_LIMIT_EXCEEDED");
+      }
 
-    await client.increment("balance", { by: amountToDeposit, transaction });
+      await client.increment("balance", { by: amountToDeposit, transaction });
 
-    return res.status(200).end();
-  });
+      return res.status(200).end();
+    },
+    { isolationLevel: ISOLATION_LEVELS.SERIALIZABLE }
+  );
 });
 
 module.exports = app;
