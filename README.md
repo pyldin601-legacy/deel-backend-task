@@ -1,6 +1,15 @@
 # DEEL BACKEND TASK
 
-  
+```text
+What have been done:
+    * Implemented route handlers according to the task.
+    * Added linters to maintain code style: `eslint`, `prettier`.
+    * Improved app structure for better testing experience.
+    * Added application tests for testing route handlers using jest.
+    * Used `zod` for validating request parameters.
+    * Added mocks for models serialization. They don't contain any logic and just pass models as is.
+    * Added integration with github-actions.
+```  
 
 💫 Welcome! 🎉
 
