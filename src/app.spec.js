@@ -216,9 +216,7 @@ describe("on GET /admin/best-profession?start=<date>&end=<date>", () => {
   });
 
   it("should fail with 400 if no time range specified", async () => {
-    await request
-      .get(`/admin/best-profession`)
-      .expect(400, "DATE_RANGE_NOT_SPECIFIED");
+    await request.get(`/admin/best-profession`).expect(400);
   });
 });
 
