@@ -1,5 +1,6 @@
 const express = require("express");
 const bodyParser = require("body-parser");
+const z = require("zod");
 const {
   Op,
   Transaction: { ISOLATION_LEVELS },
@@ -190,15 +191,22 @@ app.post("/balances/deposit/:id", async (req, res) => {
   );
 });
 
+const BestProfessionQueryParams = z.object({
+  start: z.string().datetime(),
+  end: z.string().datetime(),
+});
+
 app.get("/admin/best-profession", async (req, res) => {
-  const { start: startDate, end: endDate } = req.query;
-
-  // @todo Implement proper validation of startDate and endDate.
-  if (!startDate || !endDate) {
-    return res.status(400).end("DATE_RANGE_NOT_SPECIFIED");
-  }
-
   const { Profile, Contract, Job } = req.app.get("models");
+
+  const parseResult = BestProfessionQueryParams.safeParse(req.query);
+
+  if (!parseResult.success) {
+    return res.status(400).json({
+      errors: parseResult.error.issues,
+    });
+  }
+  const parsedParams = parseResult.data;
 
   const topProfession = await Profile.findOne({
     attributes: {
@@ -223,7 +231,7 @@ app.get("/admin/best-profession", async (req, res) => {
             where: {
               paid: true,
               paymentDate: {
-                [Op.between]: [startDate, endDate],
+                [Op.between]: [parsedParams.start, parsedParams.end],
               },
             },
           },
@@ -242,23 +250,23 @@ app.get("/admin/best-profession", async (req, res) => {
   return res.status(200).json({ profession, totalEarned });
 });
 
+const BestClientsQueryParams = z.object({
+  start: z.string().datetime(),
+  end: z.string().datetime(),
+  limit: z.coerce.number().positive().default(2),
+});
+
 app.get("/admin/best-clients", async (req, res) => {
-  const { start: startDate, end: endDate } = req.query;
-  let { limit = 2 } = req.query;
-
-  // @todo Implement proper validation of startDate and endDate.
-  if (!startDate || !endDate) {
-    return res.status(400).end("DATE_RANGE_NOT_SPECIFIED");
-  }
-
-  // @todo Correctly cast limit to number or use input validation based on contracts (io-ts, zod, etc...)
-  limit = +limit;
-
-  if (Number.isNaN(limit) || limit <= 0 || limit > 50) {
-    return res.status(400).end("INVALID_LIMIT_VALUE");
-  }
-
   const { Profile, Contract, Job } = req.app.get("models");
+
+  const parseResult = BestClientsQueryParams.safeParse(req.query);
+
+  if (!parseResult.success) {
+    return res.status(400).json({
+      errors: parseResult.error.issues,
+    });
+  }
+  const parsedParams = parseResult.data;
 
   const topClients = await Profile.findAll({
     attributes: {
@@ -267,7 +275,7 @@ app.get("/admin/best-clients", async (req, res) => {
     where: { type: "client" },
     order: [[sequelize.fn("sum", sequelize.literal("price")), "DESC"]],
     group: [["Client.id"]],
-    limit,
+    limit: parsedParams.limit,
     include: [
       {
         model: Contract,
@@ -284,7 +292,7 @@ app.get("/admin/best-clients", async (req, res) => {
             where: {
               paid: true,
               paymentDate: {
-                [Op.between]: [startDate, endDate],
+                [Op.between]: [parsedParams.start, parsedParams.end],
               },
             },
           },
