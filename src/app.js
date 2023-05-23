@@ -215,11 +215,13 @@ app.get("/admin/best-profession", async (req, res) => {
         attributes: [],
         as: "Contractor",
         required: true,
+        duplicating: false,
         include: [
           {
             model: Job,
             attributes: [],
             required: true,
+            duplicating: false,
             where: {
               paid: true,
               paymentDate: {
@@ -242,6 +244,60 @@ app.get("/admin/best-profession", async (req, res) => {
   const totalEarned = topProfession.get("totalEarned");
 
   return res.status(200).json({ profession, totalEarned });
+});
+
+app.get("/admin/best-clients", async (req, res) => {
+  const { start: startDate, end: endDate } = req.query;
+  let { limit = 2 } = req.query;
+
+  // @todo Implement proper validation of startDate and endDate.
+  if (!startDate || !endDate) {
+    return res.status(400).end("DATE_RANGE_NOT_SPECIFIED");
+  }
+
+  // @todo Correctly cast limit to number or use input validation based on contracts (io-ts, zod, etc...)
+  limit = +limit;
+
+  if (Number.isNaN(limit) || limit <= 0 || limit > 50) {
+    return res.status(400).end("INVALID_LIMIT_VALUE");
+  }
+
+  const { Profile, Contract, Job } = req.app.get("models");
+
+  const topClients = await Profile.findAll({
+    attributes: {
+      include: [[sequelize.fn("sum", sequelize.literal("price")), "totalPaid"]],
+    },
+    where: { type: "client" },
+    order: [[sequelize.fn("sum", sequelize.literal("price")), "DESC"]],
+    group: [["Client.id"]],
+    limit,
+    include: [
+      {
+        model: Contract,
+        attributes: [],
+        duplicating: false,
+        as: "Client",
+        required: true,
+        include: [
+          {
+            model: Job,
+            attributes: [],
+            duplicating: false,
+            required: true,
+            where: {
+              paid: true,
+              paymentDate: {
+                [Op.between]: [startDate, endDate],
+              },
+            },
+          },
+        ],
+      },
+    ],
+  });
+
+  return res.status(200).json(serializeAll(topClients));
 });
 
 module.exports = app;

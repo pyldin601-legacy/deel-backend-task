@@ -214,6 +214,71 @@ describe("on GET /admin/best-profession?start=<date>&end=<date>", () => {
       .get(`/admin/best-profession?start=${startDate}&end=${endDate}`)
       .expect(409, "INSUFFICIENT_DATA");
   });
+
+  it("should fail with 400 if no time range specified", async () => {
+    await request
+      .get(`/admin/best-profession`)
+      .expect(400, "DATE_RANGE_NOT_SPECIFIED");
+  });
 });
 
-describe("on GET /admin/best-clients?start=<date>&end=<date>&limit=<integer>", () => {});
+describe("on GET /admin/best-clients?start=<date>&end=<date>&limit=<integer>", () => {
+  it("should return the list with top paid client in specified range of time with if limit = 1", async () => {
+    const startDate = new Date("2020-08-01T00:00:00.000Z");
+    const endDate = new Date("2020-08-30T23:59:59.999Z");
+
+    const response = await request.get(
+      `/admin/best-clients?start=${startDate}&end=${endDate}&limit=1`
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual([
+      expect.objectContaining({
+        id: 4,
+        firstName: "Ash",
+        lastName: "Kethcum",
+        totalPaid: 2020,
+      }),
+    ]);
+  });
+
+  it("should return the top 2 paid clients in specified range of time with default limit", async () => {
+    const startDate = new Date("2020-08-01T00:00:00.000Z");
+    const endDate = new Date("2020-08-30T23:59:59.999Z");
+
+    const response = await request.get(
+      `/admin/best-clients?start=${startDate}&end=${endDate}`
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual([
+      expect.objectContaining({
+        id: 4,
+        firstName: "Ash",
+        lastName: "Kethcum",
+        totalPaid: 2020,
+      }),
+      expect.objectContaining({
+        id: 2,
+        firstName: "Mr",
+        lastName: "Robot",
+        totalPaid: 442,
+      }),
+    ]);
+  });
+
+  it("should fail with 400 if wrong limit specified", async () => {
+    const startDate = new Date("2020-08-01T00:00:00.000Z");
+    const endDate = new Date("2020-08-30T23:59:59.999Z");
+
+    await request
+      .get(`/admin/best-clients?start=${startDate}&end=${endDate}&limit=-10`)
+      .expect(400, "INVALID_LIMIT_VALUE");
+  });
+
+  it("should fail with 400 if no time range specified", async () => {
+    await request
+      .get(`/admin/best-clients?limit=-10`)
+      .expect(400, "DATE_RANGE_NOT_SPECIFIED");
+  });
+});
