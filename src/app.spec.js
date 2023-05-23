@@ -190,6 +190,30 @@ describe("on POST /balances/deposit/:userId", () => {
   });
 });
 
-describe("on GET /admin/best-profession?start=<date>&end=<date>", () => {});
+describe("on GET /admin/best-profession?start=<date>&end=<date>", () => {
+  it("should return best profession for specified range of time", async () => {
+    const startDate = new Date("2020-08-01T00:00:00.000Z");
+    const endDate = new Date("2020-08-30T23:59:59.999Z");
+
+    const response = await request.get(
+      `/admin/best-profession?start=${startDate}&end=${endDate}`
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({
+      profession: "Programmer",
+      totalEarned: 2683,
+    });
+  });
+
+  it("should fail with 409 if there is no data for specified range of time", async () => {
+    const startDate = new Date("2020-01-01T00:00:00.000Z");
+    const endDate = new Date("2020-01-30T23:59:59.999Z");
+
+    await request
+      .get(`/admin/best-profession?start=${startDate}&end=${endDate}`)
+      .expect(409, "INSUFFICIENT_DATA");
+  });
+});
 
 describe("on GET /admin/best-clients?start=<date>&end=<date>&limit=<integer>", () => {});

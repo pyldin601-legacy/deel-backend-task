@@ -189,4 +189,58 @@ app.post("/balances/deposit/:id", async (req, res) => {
   );
 });
 
+app.get("/admin/best-profession", async (req, res) => {
+  const { start: startDate, end: endDate } = req.query;
+
+  // @todo Implement proper validation of startDate and endDate.
+  if (!startDate || !endDate) {
+    return res.status(400).end("DATE_RANGE_NOT_SPECIFIED");
+  }
+
+  const { Profile, Contract, Job } = req.app.get("models");
+
+  // @todo The resulting SQL statement is suboptimal and incompatible with `Profile.findOne` query.
+  //       It needs to be optimized and modified to align with the expected logic for `Profile.findOne`.
+  const topProfessions = await Profile.findAll({
+    attributes: {
+      include: [[sequelize.fn("SUM", sequelize.col("price")), "totalEarned"]],
+    },
+    where: { type: "contractor" },
+    order: [[sequelize.literal("totalEarned"), "DESC"]],
+    group: "profession",
+    include: [
+      {
+        model: Contract,
+        attributes: [],
+        as: "Contractor",
+        required: true,
+        include: [
+          {
+            model: Job,
+            attributes: [],
+            required: true,
+            where: {
+              paid: true,
+              paymentDate: {
+                [Op.between]: [startDate, endDate],
+              },
+            },
+          },
+        ],
+      },
+    ],
+  });
+
+  const [topProfession] = topProfessions;
+
+  if (!topProfession) {
+    return res.status(409).end("INSUFFICIENT_DATA");
+  }
+
+  const profession = topProfession.get("profession");
+  const totalEarned = topProfession.get("totalEarned");
+
+  return res.status(200).json({ profession, totalEarned });
+});
+
 module.exports = app;
