@@ -5,6 +5,7 @@ const {
   Transaction: { ISOLATION_LEVELS },
 } = require("sequelize");
 const { sequelize } = require("./model");
+const { serialize, serializeAll } = require("./serializer");
 const { getProfile } = require("./middleware/getProfile");
 
 const app = express();
@@ -25,7 +26,7 @@ app.get("/contracts", getProfile, async (req, res) => {
     },
   });
 
-  return res.json(contracts);
+  return res.json(serializeAll(contracts, null));
 });
 
 /**
@@ -48,7 +49,7 @@ app.get("/contracts/:id", getProfile, async (req, res) => {
     return res.status(403).end();
   }
 
-  return res.json(contract);
+  return res.json(serialize(contract, null));
 });
 
 /**
@@ -72,7 +73,7 @@ app.get("/jobs/unpaid", getProfile, async (req, res) => {
     where: { paid: { [Op.not]: true } },
   });
 
-  return res.json(jobs);
+  return res.json(serializeAll(jobs, null));
 });
 
 /**
