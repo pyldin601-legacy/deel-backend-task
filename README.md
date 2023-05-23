@@ -7,8 +7,15 @@ What have been done:
     * Improved app structure for better testing experience.
     * Added application tests for testing route handlers using jest.
     * Used `zod` for validating request parameters.
-    * Added mocks for models serialization. They don't contain any logic and just pass models as is.
+    * Added mocks for models serialization. They don't contain any logic
+      and just pass models as is.
     * Added integration with github-actions.
+
+What's need to be done:
+    * Proper handling of graceful application shutdown. Otherwise it can 
+      drop ongoing client requests when rolling out new version.
+    * Improve database migrations. Ideally, migrations should be stored.
+      in separate repository. Using the Model.sync() in production is quite dangerous.
 ```  
 
 💫 Welcome! 🎉
