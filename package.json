@@ -13,8 +13,8 @@
     "start": "nodemon ./src/server.js",
     "seed": "node ./scripts/seedDb.js",
     "test": "jest",
-    "lint": "eslint src/",
-    "lint:fix": "eslint src/ --fix"
+    "lint": "eslint src/ && prettier --check src/",
+    "lint:fix": "eslint src/ --fix && prettier --write src/"
   },
   "devDependencies": {
     "concurrently": "4.1.0",
