@@ -200,9 +200,7 @@ app.get("/admin/best-profession", async (req, res) => {
 
   const { Profile, Contract, Job } = req.app.get("models");
 
-  // @todo The resulting SQL statement is suboptimal and incompatible with `Profile.findOne` query.
-  //       It needs to be optimized and modified to align with the expected logic for `Profile.findOne`.
-  const topProfessions = await Profile.findAll({
+  const topProfession = await Profile.findOne({
     attributes: {
       include: [[sequelize.fn("SUM", sequelize.col("price")), "totalEarned"]],
     },
@@ -233,8 +231,6 @@ app.get("/admin/best-profession", async (req, res) => {
       },
     ],
   });
-
-  const [topProfession] = topProfessions;
 
   if (!topProfession) {
     return res.status(409).end("INSUFFICIENT_DATA");
