@@ -32,6 +32,11 @@ Profile.init(
   {
     sequelize,
     modelName: "Profile",
+    indexes: [
+      {
+        fields: ["type"],
+      },
+    ],
   }
 );
 
@@ -49,6 +54,11 @@ Contract.init(
   {
     sequelize,
     modelName: "Contract",
+    indexes: [
+      {
+        fields: ["status"],
+      },
+    ],
   }
 );
 
@@ -74,6 +84,14 @@ Job.init(
   {
     sequelize,
     modelName: "Job",
+    indexes: [
+      {
+        fields: ["paymentDate"],
+      },
+      {
+        fields: ["paid"],
+      },
+    ],
   }
 );
 
