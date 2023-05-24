@@ -12,10 +12,15 @@ What have been done:
     * Added integration with github-actions.
 
 What's need to be done:
+    * Add more test cases to test all possible corner cases.
     * Proper handling of graceful application shutdown. Otherwise it can 
       drop ongoing client requests when rolling out new version.
     * Improve database migrations. Ideally, migrations should be stored.
       in separate repository. Using the Model.sync() in production is quite dangerous.
+
+What could be done:
+    * Use TypeScript for better static analyzing and defactoring experience.
+    * Move route handlers to external files.
 ```  
 
 💫 Welcome! 🎉
