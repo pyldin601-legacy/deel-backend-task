@@ -19,6 +19,7 @@ What's need to be done:
       in separate repository. Using the Model.sync() in production is quite dangerous.
 
 What could be done:
+    * Use something to document the API (input parameters and error responses), for example Swagger.
     * Use TypeScript for better static analyzing and defactoring experience.
     * Move route handlers to external files.
 ```  
