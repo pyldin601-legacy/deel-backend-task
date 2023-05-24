@@ -12,7 +12,7 @@ beforeEach(async () => {
 });
 
 describe("on GET /contracts", () => {
-  it("should fail with 400 if profile_id header not set", async () => {
+  it("should fail with 401 if profile_id header not set", async () => {
     await request.get("/contracts").expect(401);
   });
 
