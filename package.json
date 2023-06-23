@@ -4,7 +4,7 @@
   "private": true,
   "dependencies": {
     "body-parser": "^1.19.0",
-    "express": "4.17.1",
+    "express": "4.18.2",
     "sequelize": "^6.3.4",
     "sqlite3": "^5.0.0",
     "zod": "^3.21.4"
